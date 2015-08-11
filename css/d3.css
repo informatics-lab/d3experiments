@@ -1,0 +1,7 @@
+div.bar {
+    display: inline-block;
+    width: 0px; /* override with d3 */
+    height: 2px;
+    margin-left: 50%;
+    background-color: teal;
+}
