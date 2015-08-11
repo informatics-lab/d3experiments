@@ -24,33 +24,55 @@ horizBarChart = function(data){
                     .attr("height", h);
 
     // width = 100;
-    barLength = d3.scale.linear()
+    var barLength = d3.scale.linear()
                     .domain(d3.extent(data, function(d){return d.temp;}))
                     .range([-w/2, w/2]);
-    colorIntensity = d3.scale.linear()
+    var colorIntensity = d3.scale.linear()
                         .domain([0, d3.max(data, function(d){return Math.abs(d.temp);})])
                         .range([0, 255]);
+    var chronoligicalOrder = d3.scale.ordinal().
+                                    .domain(d3.range(data.length))
+                                    .rangeRoundBands([0, h], 0.05)
+    var tooltip = d3.select("body")
+                    .append("div")  // declare the tooltip div 
+                    .attr("class", "tooltip") // apply the 'tooltip' class
+                    .style("opacity", 0); 
+
     g = colorIntensity;
 
 
     svg.selectAll("rect")
         .data(data)
             .enter()
-            .append("rect")
-                .attr("x", function(d) {return w / 2 + Math.min(0.0, barLength(d.temp));})
-                .attr("y", function(d, i){ return i * (h / (data.length)); })
-                .attr("height", (h / data.length) * (1.0-barPadding))
-                .attr("width", function(d) { return Math.abs(barLength(d.temp)); })
-                .attr("fill", function(d) {
-                    var rgbstr = ""
-                    if (d.temp <= 0.0){
-                        rgbstr = "rgb(0, 0, "+ Math.round(colorIntensity(Math.abs(d.temp))) +")";
-                    }else{
-                        rgbstr = "rgb("+ Math.round(colorIntensity(Math.abs(d.temp))) +", 0, 0)";
-                    }
-                    return rgbstr
-                })
-}
+                .append("rect")
+                    .attr("x", function(d) {return w / 2 + Math.min(0.0, barLength(d.temp));})
+                    .attr("y", function(d, i){ return i * (h / (data.length)); })
+                    .attr("height", (h / data.length) * (1.0-barPadding))
+                    .attr("fill", function(d) {
+                        var rgbstr = ""
+                        if (d.temp <= 0.0){
+                            rgbstr = "rgb(0, 0, "+ Math.round(colorIntensity(Math.abs(d.temp))) +")";
+                        }else{
+                            rgbstr = "rgb("+ Math.round(colorIntensity(Math.abs(d.temp))) +", 0, 0)";
+                        }
+                        return rgbstr
+                    })
+                    .attr("width", function(d) { return Math.abs(barLength(d.temp)); })
+                    .on("mouseover", function(d){
+                        tooltip.transition()
+                                    .duration(500)
+                                    .style("opacity", 0.9)
+                        tooltip.html(d.year)
+                                .style("left", (d3.event.pageX) + "px")          
+                                .style("top", (d3.event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function(d){
+                        tooltip.transition()
+                                    .duration(500)
+                                    .style("opacity", 0.0)
+                    })
+
+    }
 
 
 loadData();
