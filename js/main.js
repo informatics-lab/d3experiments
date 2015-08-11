@@ -16,37 +16,55 @@ loadData = function(){
 horizBarChart = function(data){
     var w = 500;
     var h = 700;
-    var barPadding = 0.1;
+    var barPadding = 0.5;
 
     var svg = d3.select("body")
                 .append("svg")
                     .attr("width", w)
                     .attr("height", h);
 
+    var chronologicalOrder = function(a, b) {return a.year - b.year;}
+    var temperatureOrder = function(a, b) {return a.temp - b.temp;}
+
+    d3.select("body")
+      .append("label")
+        .html("<input id=sortCheck type=checkbox> sort years")
+      .on("change", function(){
+        svg.selectAll(".bar")
+           .sort(d3.select("#sortCheck").property("checked") ? temperatureOrder : chronologicalOrder)
+        svg.transition()
+            .duration(200)
+            .selectAll(".bar")
+            .delay(function(d, i){ return i * 30; })
+            .attr("y", function(d, i){ return barOrder(i) })
+      })
+
     // width = 100;
     var barLength = d3.scale.linear()
                     .domain(d3.extent(data, function(d){return d.temp;}))
                     .range([-w/2, w/2]);
     var colorIntensity = d3.scale.linear()
-                        .domain([0, d3.max(data, function(d){return Math.abs(d.temp);})])
-                        .range([0, 255]);
-    var chronoligicalOrder = d3.scale.ordinal().
-                                    .domain(d3.range(data.length))
-                                    .rangeRoundBands([0, h], 0.05)
+                           .domain([0, d3.max(data, function(d){return Math.abs(d.temp);})])
+                           .range([0, 255]);
+    var barOrder = d3.scale.ordinal()
+                           .domain(d3.range(data.length))
+                           .rangeRoundBands([0, h], barPadding)
+    
     var tooltip = d3.select("body")
                     .append("div")  // declare the tooltip div 
                     .attr("class", "tooltip") // apply the 'tooltip' class
-                    .style("opacity", 0); 
+                    .style("opacity", 0);
 
     g = colorIntensity;
 
 
-    svg.selectAll("rect")
+    svg.selectAll(".bar")
         .data(data)
             .enter()
                 .append("rect")
+                    .attr("class", "bar")
                     .attr("x", function(d) {return w / 2 + Math.min(0.0, barLength(d.temp));})
-                    .attr("y", function(d, i){ return i * (h / (data.length)); })
+                    .attr("y", function(d, i){ return barOrder(i) })
                     .attr("height", (h / data.length) * (1.0-barPadding))
                     .attr("fill", function(d) {
                         var rgbstr = ""
