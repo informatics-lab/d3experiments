@@ -11,8 +11,14 @@ div.tooltip {
   pointer-events: none;         
 }
 
-label {
+#sort {
   position: absolute;
   top: 10px;
+  right: 10px;
+}
+
+#tempRange {
+  position: absolute;
+  top: 50px;
   right: 10px;
 }

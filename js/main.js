@@ -8,12 +8,16 @@ loadData = function(){
         hadcrut.push({"year": parseInt(els[0]), "temp": parseFloat(els[1])});
     })
 
-    testdata = [{"year": 2000, "temp": -32}, {"year": 2001, "temp": 42}, {"year": 2002, "temp": 13}, {"year": 2003, "temp": 23}]
     horizBarChart(hadcrut);
   });
 };
 
-horizBarChart = function(data){
+function update() {
+    
+}
+
+horizBarChart = function(allData){
+    var data = allData;
     var w = 500;
     var h = 700;
     var barPadding = 0.5;
@@ -28,6 +32,7 @@ horizBarChart = function(data){
 
     d3.select("body")
       .append("label")
+        .attr("id", "sort")
         .html("<input id=sortCheck type=checkbox> sort years")
       .on("change", function(){
         svg.selectAll(".bar")
@@ -38,6 +43,14 @@ horizBarChart = function(data){
             .delay(function(d, i){ return i * 30; })
             .attr("y", function(d, i){ return barOrder(i) })
       })
+
+    d3.select("#filterData")
+        .on("click", function(d) {
+            var minTemp = d3.select("#minTemp").property("value")
+            var maxTemp = d3.select("#maxTemp").property("value")
+            data = allData.filter(function(d){return d.temp > minTemp && d.temp < maxTemp})
+
+         })
 
     // width = 100;
     var barLength = d3.scale.linear()
@@ -54,9 +67,6 @@ horizBarChart = function(data){
                     .append("div")  // declare the tooltip div 
                     .attr("class", "tooltip") // apply the 'tooltip' class
                     .style("opacity", 0);
-
-    g = colorIntensity;
-
 
     svg.selectAll(".bar")
         .data(data)
@@ -80,7 +90,7 @@ horizBarChart = function(data){
                         tooltip.transition()
                                     .duration(500)
                                     .style("opacity", 0.9)
-                        tooltip.html(d.year + " " + d.temp + " &deg;C")
+                        tooltip.html(d.year + "<br />" + d.temp + " &deg;C")
                                 .style("left", (d3.event.pageX) + "px")          
                                 .style("top", (d3.event.pageY - 28) + "px");
                     })
