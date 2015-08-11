@@ -27,7 +27,10 @@ horizBarChart = function(data){
     barLength = d3.scale.linear()
                     .domain(d3.extent(data, function(d){return d.temp;}))
                     .range([-w/2, w/2]);
-    // g = barLength;
+    colorIntensity = d3.scale.linear()
+                        .domain([0, d3.max(data, function(d){return Math.abs(d.temp);})])
+                        .range([0, 255]);
+    g = colorIntensity;
 
 
     svg.selectAll("rect")
@@ -38,7 +41,15 @@ horizBarChart = function(data){
                 .attr("y", function(d, i){ return i * (h / (data.length)); })
                 .attr("height", (h / data.length) * (1.0-barPadding))
                 .attr("width", function(d) { return Math.abs(barLength(d.temp)); })
-                .attr("fill", "teal")
+                .attr("fill", function(d) {
+                    var rgbstr = ""
+                    if (d.temp <= 0.0){
+                        rgbstr = "rgb(0, 0, "+ Math.round(colorIntensity(Math.abs(d.temp))) +")";
+                    }else{
+                        rgbstr = "rgb("+ Math.round(colorIntensity(Math.abs(d.temp))) +", 0, 0)";
+                    }
+                    return rgbstr
+                })
 }
 
 
