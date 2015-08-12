@@ -55,7 +55,8 @@ horizBarChart = function(allData){
 
     // width = 100;
     var barLength = d3.scale.linear()
-                    .domain(d3.extent(data, function(d){return d.temp;}))
+                    .domain([-d3.max(data, function(d){return Math.abs(d.temp);}),
+                              d3.max(data, function(d){return Math.abs(d.temp);})])
                     .range([-w/2, w/2]);
     var colorIntensity = d3.scale.linear()
                            .domain([0, d3.max(data, function(d){return Math.abs(d.temp);})])
@@ -94,8 +95,11 @@ horizBarChart = function(allData){
                     return rgbstr
                 });
         
-        bar.attr("y", function(d, i){ return barOrder(i) })
-            .on("mouseover", function(d){
+        bar.transition()
+                .delay(function(d, i) { return 1000+i * 400 / data.length; })
+                .duration(500)
+                .attr("y", function(d, i){ return barOrder(i) })
+        bar.on("mouseover", function(d){
                     tooltip.transition()
                                 .duration(500)
                                 .style("opacity", 0.9)
