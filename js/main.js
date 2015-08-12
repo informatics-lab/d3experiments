@@ -27,22 +27,13 @@ horizBarChart = function(allData){
     var chronologicalOrder = function(a, b) {return a.year - b.year;}
     var temperatureOrder = function(a, b) {return a.temp - b.temp;}
 
-    var reorder = function(order){
-        svg.selectAll(".bar")
-           .sort(order)
-        svg.transition()
-            .duration(400)
-            .selectAll(".bar")
-            .delay(function(d, i){ return i * 1000 / data.length; })
-            .attr("y", function(d, i){ return barOrder(i) })
-    }
-
     d3.select("body")
       .append("label")
         .attr("id", "sort")
         .html("<input id=sortCheck type=checkbox> sort years")
       .on("change", function(){
-           reorder(d3.select("#sortCheck").property("checked") ? temperatureOrder : chronologicalOrder)
+            var order = d3.select("#sortCheck").property("checked") ? temperatureOrder : chronologicalOrder;
+           update(data.sort(order))
       })
 
     d3.select("#filterData")
@@ -50,6 +41,8 @@ horizBarChart = function(allData){
             var minTemp = d3.select("#minTemp").property("value");
             var maxTemp = d3.select("#maxTemp").property("value");
             data = allData.filter(function(d){return d.temp >= minTemp && d.temp < maxTemp});
+            var order = d3.select("#sortCheck").property("checked") ? temperatureOrder : chronologicalOrder;
+            update(data.sort(order))
             update(data);
          })
 
@@ -73,6 +66,18 @@ horizBarChart = function(allData){
     function update(data) {
         var bar = svg.selectAll(".bar").data(data, function(d){return d.year})
         
+        bar.exit()
+            .transition()
+                .duration(1000)
+                .attr("width", 0)
+                .attr("x", function(d) {return w / 2;})
+            .remove()
+
+         bar.transition()
+                .delay(function(d, i) { return 1000 + i * 400 / data.length; })
+                .duration(500)
+                .attr("y", function(d, i){ return barOrder(i) })
+
         bar.enter()
             .append("rect")
                 .attr("class", "bar")
@@ -96,9 +101,10 @@ horizBarChart = function(allData){
                 });
         
         bar.transition()
-                .delay(function(d, i) { return 1000+i * 400 / data.length; })
+                .delay(function(d, i) { return 1000 + i * 400 / data.length; })
                 .duration(500)
                 .attr("y", function(d, i){ return barOrder(i) })
+
         bar.on("mouseover", function(d){
                     tooltip.transition()
                                 .duration(500)
@@ -113,12 +119,7 @@ horizBarChart = function(allData){
                                 .style("opacity", 0.0)
                 });
         
-        bar.exit()
-            .transition()
-                .duration(1000)
-                .attr("width", 0)
-                .attr("x", function(d) {return w / 2;})
-            .remove()
+
 
     }
 
