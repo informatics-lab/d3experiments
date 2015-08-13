@@ -5,7 +5,15 @@ loadData = function(){
     var rows = d3.tsv.parseRows(text)
     rows.forEach(function(row){ 
         var els = row[0].split(/\s+/);
-        hadcrut.push({"year": parseInt(els[0]), "temp": parseFloat(els[1])});
+
+        var members = [];
+        for (var i=2; i < els.length; i++){
+            members.push(parseFloat(els[i]));
+        }
+
+        hadcrut.push({"year": parseInt(els[0]), 
+                      "temp": parseFloat(els[1]), 
+                      "members": members});
     })
 
     horizBarChart(hadcrut);
@@ -51,6 +59,10 @@ horizBarChart = function(allData){
                     .domain([-d3.max(data, function(d){return Math.abs(d.temp);}),
                               d3.max(data, function(d){return Math.abs(d.temp);})])
                     .range([-w/2, w/2]);
+    var dotScale = d3.scale.linear()
+                    .domain([-d3.max(data, function(d){return Math.abs(d.temp);}),
+                              d3.max(data, function(d){return Math.abs(d.temp);})])
+                    .range([0, w]);
     var colorIntensity = d3.scale.linear()
                            .domain([0, d3.max(data, function(d){return Math.abs(d.temp);})])
                            .range([0, 255]);
@@ -91,7 +103,7 @@ horizBarChart = function(allData){
                 .attr("width", 0)
                 .attr("x", function(d) {return w / 2;})
                     .transition()
-                    .delay(function(d, i) { return 1000 + i * 400 / data.length; })
+                        .delay(function(d, i) { return 1000 + i * 400 / data.length; })
                         .duration(500)
                         .attr("width", function(d) { return Math.abs(barLength(d.temp)); })
                         .attr("x", function(d) {return w / 2 + Math.min(0.0, barLength(d.temp));})
@@ -105,6 +117,11 @@ horizBarChart = function(allData){
                     return rgbstr
                 });
 
+        var lineFunction = d3.svg.line()
+                         .x(function(d) { return d.x; })
+                         .y(function(d) { return d.y; })
+                         .interpolate("linear");
+
         bar.on("mouseover", function(d){
                     tooltip.transition()
                                 .duration(500)
@@ -117,7 +134,32 @@ horizBarChart = function(allData){
                     tooltip.transition()
                                 .duration(500)
                                 .style("opacity", 0.0)
-                });
+                })
+            .on("click", function(d, i){
+                    console.log('clicked');
+                    svg.selectAll("circle").remove();
+                    svg.selectAll("path").remove();
+                    var selection = svg.selectAll("circle").data(d.members).enter();
+                    var random = Math.random();
+                    console.log(random);
+                    selection.append("path")
+                                .attr("d", function(e, j) { return lineFunction([ { "x": dotScale(d.temp),
+                                                                                    "y": barOrder(i)},
+                                                                                  { "x": dotScale(e),
+                                                                                    "y": barOrder(i) + ((2*j) - 1) - (d.members.length/2)}
+                                                                                ])
+                                                          }
+                                     )
+                                .style("stroke-width", 1)
+                                .style("stroke", "steelblue")
+                                .style("fill", "none")
+                    selection.append("circle")
+                                .attr("cx", function(e){return dotScale(e)})
+                                .attr("cy", function(e, j){return barOrder(i) + ((2*j) - 1) - (d.members.length/2)})
+                                .attr("fill", "black")
+                                .attr("r", 2.5);
+                            
+                })
         
 
 
