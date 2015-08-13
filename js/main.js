@@ -43,7 +43,7 @@ horizBarChart = function(allData){
             data = allData.filter(function(d){return d.temp >= minTemp && d.temp < maxTemp});
             var order = d3.select("#sortCheck").property("checked") ? temperatureOrder : chronologicalOrder;
             update(data.sort(order))
-            update(data);
+            //update(data);
          })
 
     // width = 100;
@@ -65,7 +65,12 @@ horizBarChart = function(allData){
 
     function update(data) {
         var bar = svg.selectAll(".bar").data(data, function(d){return d.year})
-        
+
+        // bar.transition()
+        //     .delay(function(d, i) { return 1000 + i * 400 / data.length; })
+        //     .duration(500)
+        //     .attr("y", function(d, i){ return barOrder(i) })
+      
         bar.exit()
             .transition()
                 .duration(1000)
@@ -73,8 +78,8 @@ horizBarChart = function(allData){
                 .attr("x", function(d) {return w / 2;})
             .remove()
 
-         bar.transition()
-                .delay(function(d, i) { return 1000 + i * 400 / data.length; })
+        bar.transition()
+                .delay(function(d, i) { return 500 + i * 400 / data.length; })
                 .duration(500)
                 .attr("y", function(d, i){ return barOrder(i) })
 
@@ -86,7 +91,7 @@ horizBarChart = function(allData){
                 .attr("width", 0)
                 .attr("x", function(d) {return w / 2;})
                     .transition()
-                    .delay(function(d, i) { return i * 400 / data.length; })
+                    .delay(function(d, i) { return 1000 + i * 400 / data.length; })
                         .duration(500)
                         .attr("width", function(d) { return Math.abs(barLength(d.temp)); })
                         .attr("x", function(d) {return w / 2 + Math.min(0.0, barLength(d.temp));})
@@ -99,11 +104,6 @@ horizBarChart = function(allData){
                     }
                     return rgbstr
                 });
-        
-        bar.transition()
-                .delay(function(d, i) { return 1000 + i * 400 / data.length; })
-                .duration(500)
-                .attr("y", function(d, i){ return barOrder(i) })
 
         bar.on("mouseover", function(d){
                     tooltip.transition()
