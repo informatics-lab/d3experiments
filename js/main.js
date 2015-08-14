@@ -23,9 +23,12 @@ loadData = function(){
 
 horizBarChart = function(allData){
     var data = allData;
+    var members = [];
     var w = 500;
     var h = 700;
     var barPadding = 0.5;
+
+    var barHeight = (h / data.length) * (1.0-barPadding);
 
     var svg = d3.select("body")
                 .append("svg")
@@ -41,7 +44,8 @@ horizBarChart = function(allData){
         .html("<input id=sortCheck type=checkbox> sort years")
       .on("change", function(){
             var order = d3.select("#sortCheck").property("checked") ? temperatureOrder : chronologicalOrder;
-           update(data.sort(order))
+           update(data.sort(order));
+           updateEnsMembers([], d, 0);
       })
 
     d3.select("#filterData")
@@ -50,11 +54,10 @@ horizBarChart = function(allData){
             var maxTemp = d3.select("#maxTemp").property("value");
             data = allData.filter(function(d){return d.temp >= minTemp && d.temp < maxTemp});
             var order = d3.select("#sortCheck").property("checked") ? temperatureOrder : chronologicalOrder;
-            update(data.sort(order))
-            //update(data);
+            update(data.sort(order));
+            updateEnsMembers([], d, 0);
          })
 
-    // width = 100;
     var barLength = d3.scale.linear()
                     .domain([-d3.max(data, function(d){return Math.abs(d.temp);}),
                               d3.max(data, function(d){return Math.abs(d.temp);})])
@@ -77,11 +80,6 @@ horizBarChart = function(allData){
 
     function update(data) {
         var bar = svg.selectAll(".bar").data(data, function(d){return d.year})
-
-        // bar.transition()
-        //     .delay(function(d, i) { return 1000 + i * 400 / data.length; })
-        //     .duration(500)
-        //     .attr("y", function(d, i){ return barOrder(i) })
       
         bar.exit()
             .transition()
@@ -99,7 +97,7 @@ horizBarChart = function(allData){
             .append("rect")
                 .attr("class", "bar")
                 .attr("y", function(d, i){ return barOrder(i) })
-                .attr("height", (h / data.length) * (1.0-barPadding))
+                .attr("height", barHeight)
                 .attr("width", 0)
                 .attr("x", function(d) {return w / 2;})
                     .transition()
@@ -117,11 +115,6 @@ horizBarChart = function(allData){
                     return rgbstr
                 });
 
-        var lineFunction = d3.svg.line()
-                         .x(function(d) { return d.x; })
-                         .y(function(d) { return d.y; })
-                         .interpolate("linear");
-
         bar.on("mouseover", function(d){
                     tooltip.transition()
                                 .duration(500)
@@ -136,33 +129,64 @@ horizBarChart = function(allData){
                                 .style("opacity", 0.0)
                 })
             .on("click", function(d, i){
-                    console.log('clicked');
-                    svg.selectAll("circle").remove();
-                    svg.selectAll("path").remove();
-                    var selection = svg.selectAll("circle").data(d.members).enter();
-                    var random = Math.random();
-                    console.log(random);
-                    selection.append("path")
-                                .attr("d", function(e, j) { return lineFunction([ { "x": dotScale(d.temp),
-                                                                                    "y": barOrder(i)},
-                                                                                  { "x": dotScale(e),
-                                                                                    "y": barOrder(i) + ((2*j) - 1) - (d.members.length/2)}
-                                                                                ])
-                                                          }
-                                     )
-                                .style("stroke-width", 1)
-                                .style("stroke", "steelblue")
-                                .style("fill", "none")
-                    selection.append("circle")
-                                .attr("cx", function(e){return dotScale(e)})
-                                .attr("cy", function(e, j){return barOrder(i) + ((2*j) - 1) - (d.members.length/2)})
-                                .attr("fill", "black")
-                                .attr("r", 2.5);
-                            
+                    console.log('click');
+                    updateEnsMembers(d.members, d, i);
                 })
         
 
 
+    }
+
+    function updateEnsMembers(m, d, i) {
+        var lineFunction = d3.svg.line()
+                 .x(function(d) { return d.x; })
+                 .y(function(d) { return d.y; })
+                 .interpolate("linear");
+
+        var lines = svg.selectAll("path").data(m);
+        lines.enter()
+            .append("path");
+
+        lines
+            .attr("d", function(e, j) { return lineFunction([ { "x": dotScale(d.temp),
+                                                                "y": barOrder(i)},
+                                                              { "x": dotScale(d.temp),
+                                                                "y": barOrder(i)},
+                                                            ])
+                                      }
+                 )
+            .style("stroke-width", 1)
+            .style("stroke", 'MediumSeaGreen')
+            .style("fill", "none")
+            .transition()
+                .attr("d", function(e, j) { return lineFunction([ { "x": dotScale(d.temp),
+                                                                    "y": barOrder(i)},
+                                                                  { "x": dotScale(e),
+                                                                    "y": barOrder(i) + ((2*j) - 1) - (m.length/2)}
+                                                                ])
+                                          }
+                     )
+
+        lines.exit()
+            .remove();
+
+
+        var values = svg.selectAll("circle").data(m);
+        values.enter()
+            .append("circle");
+
+        values
+            .attr("cx", function(e){return dotScale(d.temp)})
+            .attr("cy", function(e, j){return barOrder(i)})
+            .attr("fill", "black")
+            .style("stroke", 'MediumSeaGreen')
+            .attr("r", 2.5)
+            .transition()
+                .attr("cx", function(e){return dotScale(e)})
+                .attr("cy", function(e, j){return barOrder(i) + ((2*j) - 1) - (m.length/2)})
+
+        values.exit()
+            .remove();
     }
 
 
